@@ -1,21 +1,7 @@
-import os
-import time
-from slackclient import SlackClient
 
-# export BOT_ID='U69A0HNTG'
-# export SLACK_BOT_TOKEN='xoxb-213340600934-1okJ4SowSJTPYiCojH7ypYca'
-
-# starterbot's ID as an environment variable
-BOT_ID = 'U69A0HNTG'
-
-# constants
-AT_BOT = "<@" + BOT_ID + ">"
 EXAMPLE_COMMAND = "do"
 
-# instantiate Slack
-slack_client = SlackClient('xoxb-213340600934-1okJ4SowSJTPYiCojH7ypYca')
-
-def handle_command(command, channel):
+def handle_command(command, channel, slack_client):
     """
         Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
@@ -29,12 +15,13 @@ def handle_command(command, channel):
                           text=response, as_user=True)
 
 
-def parse_slack_output(slack_rtm_output):
+def parse_slack_output(slack_rtm_output, bot_id):
     """
         The Slack Real Time Messaging API is an events firehose.
         this parsing function returns None unless a message is
         directed at the Bot, based on its ID.
     """
+    AT_BOT = "<@" + bot_id + ">"
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
@@ -43,16 +30,3 @@ def parse_slack_output(slack_rtm_output):
                 return output['text'].split(AT_BOT)[1].strip().lower(), \
                        output['channel']
     return None, None
-
-if __name__ == "__main__":
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
-    if slack_client.rtm_connect():
-        print("StarterBot connected and running!")
-        while True:
-            command, channel = parse_slack_output(slack_client.rtm_read())
-            if command and channel:
-                handle_command(command, channel)
-            time.sleep(READ_WEBSOCKET_DELAY)
-    else:
-        print("Connection failed. Invalid Slack token or bot ID?")
-
